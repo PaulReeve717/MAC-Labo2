@@ -23,11 +23,29 @@ public class Requests {
     }
 
     public List<Record> possibleSpreaders() {
-        throw new UnsupportedOperationException("Not implemented, yet");
+        var dbVisualizationQuery =
+                "match(sick:Person)-[v1:VISITS]->(place:Place)<-[v2:VISITS]-(healthy:Person)\n" +
+                "where sick.healthstatus = 'Sick' and healthy.healthstatus = 'Healthy' \n" +
+                "    and v1.starttime > sick.confirmedtime and v2.starttime > sick.confirmedtime\n" +
+                "return distinct  sick.name as sickName";
+
+        try (var session = driver.session()) {
+            var result = session.run(dbVisualizationQuery);
+            return result.list();
+        }
     }
 
     public List<Record> possibleSpreadCounts() {
-        throw new UnsupportedOperationException("Not implemented, yet");
+        var dbVisualizationQuery =
+                "match(sick:Person)-[v1:VISITS]->(place:Place)<-[v2:VISITS]-(healthy:Person)\n" +
+                "where sick.healthstatus = 'Sick' and healthy.healthstatus = 'Healthy' \n" +
+                "    and v1.starttime > sick.confirmedtime and v2.starttime > sick.confirmedtime\n" +
+                "return distinct  sick.name as sickName, count(healthy) as nbHealthy";
+
+        try (var session = driver.session()) {
+            var result = session.run(dbVisualizationQuery);
+            return result.list();
+        }
     }
 
     public List<Record> carelessPeople() {
