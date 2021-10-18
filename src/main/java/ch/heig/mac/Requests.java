@@ -62,7 +62,15 @@ public class Requests {
     }
 
     public List<Record> sociallyCareful() {
-        throw new UnsupportedOperationException("Not implemented, yet");
+        var dbVisualizationQuery =
+                "match (person:Person)-[v:VISITS]->(place:Place)\n" +
+                "where  person.healthstatus = 'Sick' and not (person.confirmedtime < v.endtime and place.type = 'Bar') \n" +
+                "return distinct person.name";
+
+        try (var session = driver.session()) {
+            var result = session.run(dbVisualizationQuery);
+            return result.list();
+        }
     }
 
     public List<Record> peopleToInform() {
