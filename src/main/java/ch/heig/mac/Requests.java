@@ -102,6 +102,19 @@ public class Requests {
     }
 
     public List<Record> sickFrom(List<String> names) {
-        throw new UnsupportedOperationException("Not implemented, yet");
+        String personList = "";
+        for (String name : names) {
+            personList += "'"+name+"',";
+        }
+        personList = personList.substring(0, personList.length() - 1);
+        var dbVisualizationQuery =
+                "MATCH (p:Person {healthstatus: 'Sick'})\n" +
+                "WHERE p.name IN ["+ personList +"]\n" +
+                "RETURN p.name AS sickName";
+
+        try (var session = driver.session()) {
+            var result = session.run(dbVisualizationQuery);
+            return result.list();
+        }
     }
 }
