@@ -94,7 +94,26 @@ public class Requests {
     }
 
     public List<Record> healthyCompanionsOf(String name) {
-        throw new UnsupportedOperationException("Not implemented, yet");
+        //The function apoc.path.subgraphNodes was used instead of the notation saw in the slides because it has a better performance
+        var dbVisualizationQuery =
+                "MATCH (person:Person)\n" +
+                "WHERE  person.name = '"+name+"'\n" +
+                "WITH person\n" +
+                "CALL apoc.path.subgraphNodes(person , {\n" +
+                "   minLevel : 1,\n" +
+                "   maxLevel: 6,\n" +
+                "   relationshipFilter : 'VISITS'\n" +
+                "})\n" +
+                "YIELD node\n" +
+                "WHERE node:Person\n" +
+                "WITH person, node as other\n" +
+                "WHERE other.healthstatus = 'Healthy'\n" +
+                "RETURN other.name as healthyName";
+
+        try (var session = driver.session()) {
+            var result = session.run(dbVisualizationQuery);
+            return result.list();
+        }
     }
 
     public Record topSickSite() {
