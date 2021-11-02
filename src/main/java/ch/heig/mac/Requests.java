@@ -94,7 +94,12 @@ public class Requests {
     }
 
     public List<Record> healthyCompanionsOf(String name) {
-        //The function apoc.path.subgraphNodes was used instead of the notation saw in the slides because it has a better performance
+        /*
+        The function 'apoc.path.subgraphNodes' was used instead of the notation saw in the slides because it has a better performance
+        the minimum hop number can only be put at a maximum of 1
+        This doesn't cause problem in this request because
+        we need anyway a minimum of 2 hops to join two persons (person1->place<-person2).
+         */
         var dbVisualizationQuery =
                 "MATCH (person:Person)\n" +
                 "WHERE  person.name = '"+name+"'\n" +
@@ -117,7 +122,16 @@ public class Requests {
     }
 
     public Record topSickSite() {
-        throw new UnsupportedOperationException("Not implemented, yet");
+        var dbVisualizationQuery =
+                "MATCH (sick:Person {healthstatus: 'Sick'})-[v:VISITS]->(pl:Place)\n" +
+                "WHERE sick.confirmedtime < v.starttime\n" +
+                "RETURN pl.type as placeType, size(collect(sick.id)) as nbOfSickVisits\n" +
+                "ORDER BY nbOfSickVisits DESC\n" +
+                "LIMIT 1";
+        try (var session = driver.session()) {
+            var result = session.run(dbVisualizationQuery);
+            return result.list().get(0);
+        }
     }
 
     public List<Record> sickFrom(List<String> names) {
