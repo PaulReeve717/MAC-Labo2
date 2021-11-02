@@ -81,7 +81,7 @@ public class Requests {
                         "    apoc.coll.min([v1.endtime, v2.endtime]), apoc.coll.max([v1.starttime, v2.starttime])) as chev, \n" +
                         "    duration({hours: 2}) as duration\n" +
                         "    where sick.healthstatus = \"Sick\" and healthy.healthstatus = \"Healthy\" and datetime() + chev >= datetime() + duration and v1.starttime >= sick.confirmedtime\n" +
-                        "return sick.name, collect(distinct healthy.name) as peopleToInform";
+                        "return sick.name as sickName, collect(distinct healthy.name) as peopleToInform";
 
         try (var session = driver.session()) {
             var result = session.run(dbVisualizationQuery);
@@ -90,7 +90,19 @@ public class Requests {
     }
 
     public List<Record> setHighRisk() {
-        throw new UnsupportedOperationException("Not implemented, yet");
+        var dbVisualizationQuery =
+                "match (sick:Person)-[v1:VISITS]->(place:Place)<-[v2:VISITS]-(healthy:Person)\n" +
+                        "with sick, healthy,\n" +
+                        "    duration.inSeconds(,   \n" +
+                        "    apoc.coll.min([v1.endtime, v2.endtime]), apoc.coll.max([v1.starttime, v2.starttime])) as chev, \n" +
+                        "    duration({hours: 2}) as duration\n" +
+                        "where sick.healthstatus = 'Sick' and healthy.healthstatus = 'Healthy' and datetime() + chev >= datetime() + duration and v1.starttime >= sick.confirmedtime\n" +
+                        "set healthy.risk = 'high'\n" +
+                        "return distinct healthy.name as highRiskName";
+        try (var session = driver.session()) {
+            var result = session.run(dbVisualizationQuery);
+            return result.list();
+        }
     }
 
     public List<Record> healthyCompanionsOf(String name) {
